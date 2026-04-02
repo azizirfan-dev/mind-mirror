@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #7D8F82;    /* Sage */
+  --color-accent: #D6C7B2;     /* Warm Sand */
+  --color-background: #F7F5F2; /* Soft Linen */
+  --color-foreground: #2C2723; /* Earth Umber */
+
+  --font-sans: var(--font-hanken-grotesk), ui-sans-serif, system-ui;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia;
+  --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular;
+
+  --radius-2xl: 2rem;
+  --radius-3xl: 3rem;
+}
+
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Magnetic Button utility layer */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
