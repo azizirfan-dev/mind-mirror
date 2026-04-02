@@ -4,7 +4,8 @@ import { useMutation } from '@tanstack/react-query';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { registerWithPassword, type RegisterInput } from '@/features/auth/services/auth.service';
+import { registerWithPassword } from '@/features/auth/services/auth.service';
+import type { RegisterValues as RegisterInput } from '@/features/auth/schemas';
 
 export const useRegister = () => {
   const router = useRouter();

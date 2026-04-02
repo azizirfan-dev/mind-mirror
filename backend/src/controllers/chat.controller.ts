@@ -1,12 +1,19 @@
 import { Response } from 'express';
-import { z } from 'zod';
+import { ZodSchema } from 'zod';
 import { randomUUID } from 'crypto';
 import { AuthRequest } from '../types';
-import { StreamQuerySchema } from '@mindmirror/shared';
+import { StreamQuerySchema, WelcomeQuerySchema, InitChatBodySchema } from '../shared/schemas';
 import { getLatestEntry } from '../services/journal.service';
-import { streamSocraticResponse, ChatMessage } from '../services/ai/hf.service';
+import { streamSocraticResponse, streamWelcomeMessage, EmotionContext, ChatMessage } from '../services/ai/hf.service';
 
-const sessions = new Map<string, string>();
+interface SessionData {
+  journalContent: string;
+  emotionScores: EmotionContext | null;
+}
+
+const sessions = new Map<string, SessionData>();
+
+type LatestEntry = NonNullable<Awaited<ReturnType<typeof getLatestEntry>>>;
 
 const setSseHeaders = (res: Response): void => {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -18,58 +25,90 @@ const setSseHeaders = (res: Response): void => {
 const startPing = (res: Response): ReturnType<typeof setInterval> =>
   setInterval(() => res.write('data: {"type":"ping"}\n\n'), 1500);
 
-const pipeStream = async (
-  res: Response,
-  journalContent: string,
-  messages: ChatMessage[]
-): Promise<void> => {
+const safeParse = <T>(schema: ZodSchema<T>, data: unknown, res: Response): T | null => {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    res.status(400).json({ success: false, data: null, error: result.error.message });
+    return null;
+  }
+  return result.data;
+};
+
+const runSse = async (req: AuthRequest, res: Response, handler: () => Promise<void>): Promise<void> => {
+  setSseHeaders(res);
+  const ping = startPing(res);
+  req.on('close', () => clearInterval(ping));
+  try {
+    await handler();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Stream failed';
+    res.write(`data: ${JSON.stringify({ type: 'error', message: msg })}\n\n`);
+  } finally {
+    clearInterval(ping);
+    res.end();
+  }
+};
+
+const pipeStream = async (res: Response, journalContent: string, messages: ChatMessage[]): Promise<void> => {
   for await (const chunk of streamSocraticResponse(journalContent, messages)) {
     res.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
   }
   res.write('data: {"type":"done"}\n\n');
 };
 
-export const initChat = async (req: AuthRequest, res: Response): Promise<void> => {
-  const entry = await getLatestEntry(req.user!.id);
-  if (!entry) {
-    res.status(404).json({ success: false, data: null, error: 'No journal entries found' });
-    return;
+const pipeWelcome = async (res: Response, data: SessionData): Promise<void> => {
+  for await (const chunk of streamWelcomeMessage(data.journalContent, data.emotionScores)) {
+    res.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
   }
-  const sessionId = randomUUID();
-  sessions.set(sessionId, entry.content);
-  setTimeout(() => sessions.delete(sessionId), 30 * 60 * 1000);
-  res.json({
-    success: true,
-    data: { sessionId, journalPreview: entry.content.slice(0, 80) },
-    error: null,
-  });
+  res.write('data: {"type":"done"}\n\n');
 };
 
-export const streamChat = async (req: AuthRequest, res: Response): Promise<void> => {
-  const parsed = StreamQuerySchema.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ success: false, data: null, error: parsed.error.message });
-    return;
-  }
-  const { sessionId, message } = parsed.data;
-  const journalContent = sessions.get(sessionId);
-  if (!journalContent) {
+const extractEmotionScores = (entry: LatestEntry): EmotionContext | null => {
+  const vals = [entry.anxietyScore, entry.stressScore, entry.happinessScore, entry.angerScore, entry.sadnessScore, entry.depressionScore];
+  if (!vals.some((v) => v !== null)) return null;
+  return { anxiety: entry.anxietyScore, stress: entry.stressScore, happiness: entry.happinessScore, anger: entry.angerScore, sadness: entry.sadnessScore, depression: entry.depressionScore };
+};
+
+const toSessionData = (entry: LatestEntry): SessionData => ({
+  journalContent: entry.content,
+  emotionScores: extractEmotionScores(entry),
+});
+
+const registerSession = (data: SessionData): string => {
+  const sessionId = randomUUID();
+  sessions.set(sessionId, data);
+  setTimeout(() => sessions.delete(sessionId), 30 * 60 * 1000);
+  return sessionId;
+};
+
+export const initChat = async (req: AuthRequest, res: Response): Promise<void> => {
+  const body = safeParse(InitChatBodySchema, req.body, res);
+  if (body === null) return;
+  if (body.previousSessionId) sessions.delete(body.previousSessionId);
+  const entry = await getLatestEntry(req.user!.id);
+  const sessionData = entry ? toSessionData(entry) : { journalContent: '', emotionScores: null };
+  const sessionId = registerSession(sessionData);
+  res.json({ success: true, data: { sessionId }, error: null });
+};
+
+export const streamWelcome = async (req: AuthRequest, res: Response): Promise<void> => {
+  const query = safeParse(WelcomeQuerySchema, req.query, res);
+  if (!query) return;
+  const sessionData = sessions.get(query.sessionId);
+  if (!sessionData) {
     res.status(404).json({ success: false, data: null, error: 'Session not found' });
     return;
   }
+  await runSse(req, res, () => pipeWelcome(res, sessionData));
+};
 
-  setSseHeaders(res);
-  const pingInterval = startPing(res);
-  req.on('close', () => clearInterval(pingInterval));
-
-  try {
-    await pipeStream(res, journalContent, [{ role: 'user', content: message }]);
-  } catch (err) {
-    console.error('[streamChat]', err);
-    const msg = err instanceof Error ? err.message : 'Stream failed';
-    res.write(`data: ${JSON.stringify({ type: 'error', message: msg })}\n\n`);
-  } finally {
-    clearInterval(pingInterval);
-    res.end();
+export const streamChat = async (req: AuthRequest, res: Response): Promise<void> => {
+  const query = safeParse(StreamQuerySchema, req.query, res);
+  if (!query) return;
+  const sessionData = sessions.get(query.sessionId);
+  if (!sessionData) {
+    res.status(404).json({ success: false, data: null, error: 'Session not found' });
+    return;
   }
+  await runSse(req, res, () => pipeStream(res, sessionData.journalContent, [{ role: 'user', content: query.message }]));
 };

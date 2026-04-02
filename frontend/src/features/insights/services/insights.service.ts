@@ -1,7 +1,7 @@
 import api from '@/shared/services/api.config';
-import type { ApiResponse, InsightsData, SummaryData, TimeWindow } from '@mindmirror/shared';
+import type { ApiResponse, InsightsData, SummaryData, TimeWindow } from '@/shared/types';
 
-export type { TimeWindow, InsightsData, SummaryData, EmotionAverages, EmotionTrendPoint, ActivityDay, StreakData, JournalStats, EntryRef } from '@mindmirror/shared';
+export type { TimeWindow, InsightsData, SummaryData, EmotionAverages, EmotionTrendPoint, ActivityDay, StreakData, JournalStats, EntryRef } from '@/shared/types';
 
 export const getInsights = async (window: TimeWindow): Promise<InsightsData> => {
   const res = await api.get<ApiResponse<InsightsData>>('/insights', { params: { window } });

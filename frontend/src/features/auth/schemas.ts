@@ -1,2 +1,2 @@
-export { LoginSchema, RegisterSchema } from '@mindmirror/shared';
-export type { LoginInput as LoginValues, RegisterInput as RegisterValues } from '@mindmirror/shared';
+export { LoginSchema, RegisterSchema } from '@/shared/schemas';
+export type { LoginInput as LoginValues, RegisterInput as RegisterValues } from '@/shared/schemas';

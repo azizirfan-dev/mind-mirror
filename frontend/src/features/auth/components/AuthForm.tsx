@@ -1,12 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import type { LoginValues, RegisterValues } from '@/features/auth/schemas';
 
-export type AuthFormValues = {
-  email: string;
-  password: string;
-  name?: string;
-};
+export type AuthFormValues = LoginValues | RegisterValues;
 
 type Props = {
   title: string;

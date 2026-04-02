@@ -1,4 +1,3 @@
-// Re-exported from @mindmirror/shared — edit types there, not here.
 export type {
   TimeWindow,
   EmotionAverages,
@@ -9,4 +8,4 @@ export type {
   EmotionTrendPoint,
   InsightsData,
   SummaryData,
-} from '@mindmirror/shared';
+} from '../../shared/types';

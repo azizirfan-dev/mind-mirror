@@ -1,5 +1,6 @@
 import api from '@/shared/services/api.config';
-import type { ApiResponse, JournalEntry, JournalListItem, PaginatedEntries, EmotionScores, CreateEntryInput, UpdateEntryInput } from '@mindmirror/shared';
+import type { ApiResponse, JournalEntry, JournalListItem, PaginatedEntries, EmotionScores } from '@/shared/types';
+import type { CreateEntryInput, UpdateEntryInput } from '@/shared/schemas';
 
 export type { EmotionScores, JournalEntry, JournalListItem, PaginatedEntries, CreateEntryInput, UpdateEntryInput };
 

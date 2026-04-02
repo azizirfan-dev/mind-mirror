@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import type { AuthRequest } from '../types';
-import { LoginSchema as AuthSchema, RegisterSchema } from '@mindmirror/shared';
+import { LoginSchema as AuthSchema, RegisterSchema } from '../shared/schemas';
 import * as authService from '../services/auth.service';
 
 const sendSuccess = (res: Response, data: unknown, status = 200) => {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { initChat, createChatStream } from '@/features/chat/services/chat.service';
+import { initChat, createChatStream, createWelcomeStream } from '@/features/chat/services/chat.service';
 
 export interface ChatMessage {
   id: string;
@@ -19,13 +19,36 @@ interface SsePayload {
 
 export const useChatInit = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isRefreshDisabled, setIsRefreshDisabled] = useState(false);
+  const prevRef = useRef<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: initChat,
-    onSuccess: (data) => setSessionId(data.sessionId),
+    mutationFn: (prevId?: string) => initChat(prevId),
+    onSuccess: (data) => {
+      prevRef.current = data.sessionId;
+      setSessionId(data.sessionId);
+    },
   });
 
-  return { ...mutation, sessionId };
+  useEffect(() => {
+    mutation.mutate(undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshSession = useCallback(() => {
+    if (isRefreshDisabled || mutation.isPending) return;
+    setIsRefreshDisabled(true);
+    setTimeout(() => setIsRefreshDisabled(false), 5000);
+    mutation.mutate(prevRef.current ?? undefined);
+  }, [isRefreshDisabled, mutation]);
+
+  return {
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    sessionId,
+    refreshSession,
+    isRefreshDisabled,
+  };
 };
 
 const appendChunk = (prev: ChatMessage[], chunk: string): ChatMessage[] => {
@@ -72,7 +95,6 @@ export const useChat = (sessionId: string | null) => {
         if (errorText) handleError(es, errorText);
         else handleDone(es);
       };
-
       es.onmessage = (e: MessageEvent) => {
         const data = JSON.parse(e.data as string) as SsePayload;
         if (data.type === 'chunk' && data.text) setMessages((p) => appendChunk(p, data.text!));
@@ -84,6 +106,23 @@ export const useChat = (sessionId: string | null) => {
     },
     [handleDone, handleError],
   );
+
+  // Auto-start welcome stream whenever sessionId becomes active (init or refresh)
+  useEffect(() => {
+    esRef.current?.close();
+    if (!sessionId) {
+      setIsStreaming(false);
+      return;
+    }
+    setMessages([]);
+    setIsStreaming(true);
+    // createWelcomeStream is a stable import — excluded from deps intentionally
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    createWelcomeStream(sessionId).then((es) => {
+      esRef.current = es;
+      attachListeners(es);
+    });
+  }, [sessionId, attachListeners]);
 
   const sendMessage = useCallback(
     async (text: string) => {

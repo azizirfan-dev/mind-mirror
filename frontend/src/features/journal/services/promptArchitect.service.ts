@@ -1,5 +1,5 @@
 import api from '@/shared/services/api.config';
-import type { ApiResponse, PromptArchitectResponse } from '@mindmirror/shared';
+import type { ApiResponse, PromptArchitectResponse } from '@/shared/types';
 
 export type { PromptArchitectResponse };
 

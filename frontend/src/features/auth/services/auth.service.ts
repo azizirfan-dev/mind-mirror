@@ -1,8 +1,9 @@
 import api from '@/shared/services/api.config';
-import type { ApiResponse, AuthUser } from '@mindmirror/shared';
+import type { ApiResponse, AuthUser } from '@/shared/types';
 
-export type { ApiResponse as ApiEnvelope } from '@mindmirror/shared';
-export type { AuthUser, LoginInput, RegisterInput } from '@mindmirror/shared';
+export type { ApiResponse as ApiEnvelope } from '@/shared/types';
+export type { AuthUser } from '@/shared/types';
+export type { LoginInput, RegisterInput } from '@/shared/schemas';
 
 export const registerWithPassword = async (input: { email: string; password: string; name: string }): Promise<{ id?: string }> => {
   const res = await api.post<ApiResponse<{ id?: string }>>('/auth/register', input);

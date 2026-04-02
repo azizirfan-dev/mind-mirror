@@ -70,7 +70,16 @@ export const getLatestEntry = async (userId: string) => {
   return prisma.journalEntry.findFirst({
     where: { userId },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, content: true },
+    select: {
+      id: true,
+      content: true,
+      anxietyScore: true,
+      stressScore: true,
+      happinessScore: true,
+      angerScore: true,
+      sadnessScore: true,
+      depressionScore: true,
+    },
   });
 };
 

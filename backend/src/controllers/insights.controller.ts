@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest } from '../types';
-import { WindowQuerySchema, SummaryBodySchema } from '@mindmirror/shared';
+import { WindowQuerySchema, SummaryBodySchema } from '../shared/schemas';
 import * as insightsService from '../services/insights/insights.service';
 import * as summaryService from '../services/insights/insights.summary.service';
 import * as pdfService from '../services/insights/insights.pdf.service';

@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest } from '../types';
-import { CreateEntrySchema, UpdateEntrySchema, EntryParamsSchema, ListQuerySchema } from '@mindmirror/shared';
+import { CreateEntrySchema, UpdateEntrySchema, EntryParamsSchema, ListQuerySchema } from '../shared/schemas';
 import * as journalService from '../services/journal.service';
 
 const sendSuccess = (res: Response, data: unknown, status = 200) => {

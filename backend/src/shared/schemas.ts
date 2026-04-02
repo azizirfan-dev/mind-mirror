@@ -46,6 +46,14 @@ export const SummaryBodySchema = z.object({
 });
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
+export const InitChatBodySchema = z.object({
+  previousSessionId: z.string().uuid().optional(),
+});
+
+export const WelcomeQuerySchema = z.object({
+  sessionId: z.string().uuid(),
+});
+
 export const StreamQuerySchema = z.object({
   sessionId: z.string().uuid(),
   message: z.string().min(1).max(2000),

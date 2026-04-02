@@ -48,7 +48,6 @@ export interface PaginatedEntries {
 // ── Chat ──────────────────────────────────────────────────────────────────────
 export interface ChatInitResponse {
   sessionId: string;
-  journalPreview: string;
 }
 
 // ── Agent ─────────────────────────────────────────────────────────────────────
