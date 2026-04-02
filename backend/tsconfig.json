@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
-      "target": "ES6",
-      "module": "commonjs",
-      "outDir": "./dist",
-      "rootDir": "./src",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true
-  }
+    "target": "ES6",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@mindmirror/shared": ["../packages/shared/src/index.ts"],
+      "@mindmirror/shared/*": ["../packages/shared/src/*"]
+    }
+  },
+  "include": ["src", "../packages/shared/src"]
 }

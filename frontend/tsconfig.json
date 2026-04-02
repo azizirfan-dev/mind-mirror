@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@mindmirror/shared": ["../packages/shared/src/index.ts"],
+      "@mindmirror/shared/*": ["../packages/shared/src/*"]
     }
   },
   "include": [
@@ -28,7 +30,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "../packages/shared/src"
   ],
   "exclude": ["node_modules"]
 }

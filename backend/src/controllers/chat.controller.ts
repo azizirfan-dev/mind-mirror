@@ -2,15 +2,11 @@ import { Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { AuthRequest } from '../types';
+import { StreamQuerySchema } from '@mindmirror/shared';
 import { getLatestEntry } from '../services/journal.service';
 import { streamSocraticResponse, ChatMessage } from '../services/ai/hf.service';
 
 const sessions = new Map<string, string>();
-
-const StreamQuerySchema = z.object({
-  sessionId: z.string().uuid(),
-  message: z.string().min(1).max(2000),
-});
 
 const setSseHeaders = (res: Response): void => {
   res.setHeader('Content-Type', 'text/event-stream');

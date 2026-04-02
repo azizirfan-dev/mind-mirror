@@ -1,19 +1,11 @@
 import api from '@/shared/services/api.config';
 import { getSession } from 'next-auth/react';
+import type { ApiResponse, ChatInitResponse } from '@mindmirror/shared';
 
-export interface ChatInitResponse {
-  sessionId: string;
-  journalPreview: string;
-}
-
-interface ApiEnvelope<T> {
-  success: boolean;
-  data: T;
-  error: string | null;
-}
+export type { ChatInitResponse };
 
 export const initChat = async (): Promise<ChatInitResponse> => {
-  const res = await api.post<ApiEnvelope<ChatInitResponse>>('/chat/init');
+  const res = await api.post<ApiResponse<ChatInitResponse>>('/chat/init');
   if (!res.data.success || !res.data.data) throw new Error(res.data.error ?? 'Failed to init chat');
   return res.data.data;
 };

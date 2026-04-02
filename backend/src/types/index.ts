@@ -5,8 +5,4 @@ export interface AuthRequest extends Request {
   user?: User;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+export type { ApiResponse } from '@mindmirror/shared';

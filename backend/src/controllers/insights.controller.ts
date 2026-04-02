@@ -1,17 +1,10 @@
 import { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest } from '../types';
+import { WindowQuerySchema, SummaryBodySchema } from '@mindmirror/shared';
 import * as insightsService from '../services/insights/insights.service';
 import * as summaryService from '../services/insights/insights.summary.service';
 import * as pdfService from '../services/insights/insights.pdf.service';
-
-const WindowQuerySchema = z.object({
-  window: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
-});
-
-const SummaryBodySchema = z.object({
-  window: z.enum(['7d', '30d', '90d', 'all']),
-});
 
 const sendSuccess = (res: Response, data: unknown, status = 200) => {
   res.status(status).json({ success: true, data });

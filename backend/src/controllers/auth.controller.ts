@@ -1,16 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import type { AuthRequest } from '../types';
+import { LoginSchema as AuthSchema, RegisterSchema } from '@mindmirror/shared';
 import * as authService from '../services/auth.service';
-
-const AuthSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
-const RegisterSchema = AuthSchema.extend({
-  name: z.string().min(1, 'Username is required').max(50),
-});
 
 const sendSuccess = (res: Response, data: unknown, status = 200) => {
   res.status(status).json({ success: true, data });

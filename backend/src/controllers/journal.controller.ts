@@ -1,26 +1,8 @@
 import { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest } from '../types';
+import { CreateEntrySchema, UpdateEntrySchema, EntryParamsSchema, ListQuerySchema } from '@mindmirror/shared';
 import * as journalService from '../services/journal.service';
-
-const CreateEntrySchema = z.object({
-  title: z.string().optional(),
-  content: z.string().min(1, 'Required'),
-});
-
-const UpdateEntrySchema = z.object({
-  title: z.string().optional(),
-  content: z.string().min(1, 'Required'),
-});
-
-const EntryParamsSchema = z.object({
-  id: z.string().uuid('Invalid entry id'),
-});
-
-const ListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
 
 const sendSuccess = (res: Response, data: unknown, status = 200) => {
   res.status(status).json({ success: true, data });
